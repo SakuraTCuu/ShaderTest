@@ -1,0 +1,36 @@
+{
+  "__type__": "cc.Material",
+  "_name": "spf",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "a348a0c8-9bd2-46d8-8c2e-b85634bfe358"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "props": {
+        "pos": {
+          "__type__": "cc.Vec2",
+          "x": 0.5,
+          "y": 0.5
+        },
+        "val": 0.1,
+        "time": 0,
+        "BrokenScale": 0.05,
+        "otherTexture": {
+          "__uuid__": "6aa0aa6a-ebee-4155-a088-a687a6aadec4"
+        },
+        "texture1": {
+          "__uuid__": "ae5ecc0d-4347-47ec-a8c6-79af432ce27c"
+        },
+        "BrokenNormalMap": {
+          "__uuid__": "545db637-adbf-4e69-ae0b-b8993d37e31d"
+        }
+      },
+      "defines": {
+        "USE_TEXTURE": true
+      }
+    }
+  }
+}

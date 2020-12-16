@@ -1,0 +1,174 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.  
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        pos: { value: [0.0,0.0] }
+        val: { value: 0.00, range: [0,1] }
+        time: { value: 0.00, range: [0,1] }
+        otherTexture: {}
+        texture1: {}
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+  uniform sampler2D otherTexture; 
+
+  // uniform properties {
+  //   vec2 pos;
+  //   float val;
+  // };
+
+  // int isContains (vec2 v2) {
+  //   float val = 0.1;
+  //   float rt = pos.x + val;
+  //   float lt = pos.x - val;
+  //   float rb = pos.y + val;
+  //   float lb = pos.y - val;
+    
+  //   if(v2.x > rt || v2.x < lt || v2.y > rb || v2.y < lb ) {
+  //     return 0;
+  //   }
+  //   return 1;
+  // }
+
+  void main () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos;
+    #else
+    pos = cc_matViewProj * pos;
+    #endif
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0;
+    #endif
+
+    v_color = a_color;
+    // if(isContains(v_uv0) == 1) {
+    //   v_color.a = 0.0;
+    // }
+    gl_Position = pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+  
+  #include <alpha-test>
+  #include <texture>
+
+  in vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D texture;
+  #endif
+  
+  uniform sampler2D otherTexture; 
+  uniform sampler2D texture1; 
+  uniform properties {
+    vec2 pos;
+    float val;
+    float time;
+  };
+
+  int isContains (vec2 v2,vec2 pos) {
+    // float val = 0.05;
+    float rt = pos.x + val;
+    float lt = pos.x - val;
+    float rb = pos.y + val;
+    float lb = pos.y - val;
+    
+    if(v2.x > rt || v2.x < lt || v2.y > rb || v2.y < lb ) {
+      return 0;
+    }
+    return 1;
+  }
+
+  void main () {
+    vec4 o = vec4(1, 1, 1, 1);
+
+    #if USE_TEXTURE
+      CCTexture(texture, v_uv0, o);
+    #endif
+
+    o *= v_color;
+
+    ALPHA_TEST(o);
+
+    // if(isContains(v_uv0,pos) == 1) {
+    //   // o.a = 0.0;
+    //   //小范围的点击的坐标点映射到 otherTexture图片的坐标内;
+    //   float x = (v_uv0.x - (pos.x - val))/(val + val);
+    //   float y = (v_uv0.y - (pos.y - val))/(val + val);
+    //   // vec2 v2 = vec2(x,y); 
+    //   vec4 otherColor = texture2D(otherTexture, vec2(x,y));
+    //   if(otherColor.a <=0.2){
+    //     discard;
+    //   }
+    // }
+
+    if(isContains(v_uv0,pos) == 1) {
+
+      // o.a = 0.0;
+      //小范围的点击的坐标点映射到 otherTexture图片的坐标内;
+      float x = (v_uv0.x - (pos.x - val))/(val + val);
+      float y = (v_uv0.y - (pos.y - val))/(val + val);
+
+        // 法向纹理r通道
+      float height = texture2D(texture1,v_uv0).r;
+      // 采样纹理
+      if(height < time)
+      {
+          discard;
+      }
+
+      // vec2 v2 = vec2(x,y);
+      // vec4 otherColor = texture2D(otherTexture, vec2(x,y));
+      // if(otherColor.a <=0.2){
+      //   discard;
+      // }
+    }
+
+    // 法向纹理r通道
+    // float height = texture2D(texture1,v_uv0).r;
+    // // 采样纹理
+    // if(height < time)
+    // {
+    //     discard;
+    // }
+    
+    // if(height < time+0.04)
+    // {
+    //     // 溶解颜色，可以自定义
+    //     // o = vec4(.9,.6,0.3,o.a);
+    // }
+            
+    gl_FragColor = o;
+  }
+}%
